@@ -1,0 +1,174 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum UserStatus {
+  ACTIVE
+  WARNED
+  SUSPENDED
+  BANNED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MessageType {
+  TEXT
+  PHOTO
+  VOICE
+  GIF
+}
+
+enum ChatStatus {
+  ACTIVE
+  ENDED
+}
+
+enum ReportReason {
+  SPAM
+  INAPPROPRIATE
+  FAKE_PROFILE
+  HARASSMENT
+  OTHER
+}
+
+enum ReportStatus {
+  OPEN
+  REVIEWED
+  ACTIONED
+  DISMISSED
+}
+
+enum ModerationAction {
+  WARN
+  SUSPEND
+  BAN
+  DISMISS
+}
+
+model User {
+  id                       String             @id @default(cuid())
+  nickname                 String
+  email                    String             @unique
+  passwordHash             String
+  gender                   Gender
+  age                      Int
+  bio                      String?            @db.VarChar(280)
+  interests                String[]           @default([])
+  avatarUrl                String?
+  verificationStatus       VerificationStatus @default(PENDING)
+  verificationPhotoUrl     String?
+  verificationRejectReason String?
+  status                   UserStatus         @default(ACTIVE)
+  role                     Role               @default(USER)
+  warningCount             Int                @default(0)
+  lastWarningAt            DateTime?
+  suspendUntil             DateTime?
+  bannedAt                 DateTime?
+  banReason                String?
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
+
+  sentMessages    Message[] @relation("SentMessages")
+  reportsFiled    Report[]  @relation("Reporter")
+  reportsReceived Report[]  @relation("Reported")
+  blocks          Block[]   @relation("Blocker")
+  blockedBy       Block[]   @relation("Blocked")
+  chatsAsUserA    Chat[]    @relation("ChatUserA")
+  chatsAsUserB    Chat[]    @relation("ChatUserB")
+  actionsTaken    Report[]  @relation("Moderator")
+
+  @@index([verificationStatus])
+  @@index([status])
+  @@index([nickname])
+}
+
+model Chat {
+  id        String     @id @default(cuid())
+  userAId   String
+  userBId   String
+  status    ChatStatus @default(ACTIVE)
+  createdAt DateTime   @default(now())
+  endedAt   DateTime?
+
+  userA    User      @relation("ChatUserA", fields: [userAId], references: [id])
+  userB    User      @relation("ChatUserB", fields: [userBId], references: [id])
+  messages Message[]
+  reports  Report[]
+
+  @@index([userAId, status])
+  @@index([userBId, status])
+  @@index([createdAt])
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  chatId    String
+  senderId  String
+  type      MessageType
+  content   String
+  waveform  Int[]       @default([])
+  createdAt DateTime @default(now())
+
+  chat   Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender User @relation("SentMessages", fields: [senderId], references: [id])
+
+  @@index([chatId, createdAt])
+  @@index([createdAt])
+}
+
+model Block {
+  id            String   @id @default(cuid())
+  userId        String
+  blockedUserId String
+  createdAt     DateTime @default(now())
+
+  user        User @relation("Blocker", fields: [userId], references: [id], onDelete: Cascade)
+  blockedUser User @relation("Blocked", fields: [blockedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, blockedUserId])
+  @@index([blockedUserId])
+}
+
+model Report {
+  id          String           @id @default(cuid())
+  reporterId  String
+  reportedId  String
+  chatId      String?
+  reason      ReportReason
+  details     String?
+  chatContext Json?
+  status      ReportStatus     @default(OPEN)
+  action      ModerationAction?
+  actionNote  String?
+  reviewedAt  DateTime?
+  reviewedById String?
+  createdAt   DateTime         @default(now())
+
+  reporter   User  @relation("Reporter", fields: [reporterId], references: [id])
+  reported   User  @relation("Reported", fields: [reportedId], references: [id])
+  chat       Chat? @relation(fields: [chatId], references: [id], onDelete: SetNull)
+  reviewedBy User? @relation("Moderator", fields: [reviewedById], references: [id])
+
+  @@index([status, createdAt])
+  @@index([reportedId])
+}
