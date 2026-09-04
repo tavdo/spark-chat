@@ -9,6 +9,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { Readable } from "node:stream";
+import { prisma } from "./prisma";
 
 const ROOT = path.join(process.cwd(), "uploads");
 
@@ -19,6 +20,10 @@ function useS3() {
       process.env.S3_ACCESS_KEY &&
       process.env.S3_SECRET_KEY
   );
+}
+
+function useDbFiles() {
+  return Boolean(process.env.VERCEL) || process.env.STORAGE === "db";
 }
 
 function s3() {
@@ -69,6 +74,16 @@ export async function putObject(
     return key;
   }
 
+  if (useDbFiles()) {
+    const data = Uint8Array.from(body);
+    await prisma.storedFile.upsert({
+      where: { key },
+      create: { key, contentType, data },
+      update: { contentType, data },
+    });
+    return key;
+  }
+
   const full = path.join(ROOT, key);
   await mkdir(path.dirname(full), { recursive: true });
   await writeFile(full, body);
@@ -84,6 +99,10 @@ export async function deleteObject(key: string) {
           Key: key,
         })
       );
+      return;
+    }
+    if (useDbFiles()) {
+      await prisma.storedFile.delete({ where: { key } }).catch(() => null);
       return;
     }
     await unlink(path.join(ROOT, key));
@@ -103,6 +122,15 @@ export async function getObjectStream(key: string) {
     const body = res.Body;
     if (!body) return null;
     return { stream: body as Readable, contentType: res.ContentType };
+  }
+
+  if (useDbFiles()) {
+    const file = await prisma.storedFile.findUnique({ where: { key } });
+    if (!file) return null;
+    return {
+      stream: Readable.from(Buffer.from(file.data)),
+      contentType: file.contentType,
+    };
   }
 
   const full = path.join(ROOT, key);

@@ -16,6 +16,10 @@ export const metadata: Metadata = {
   title: "Spark — verified random chat",
   description:
     "Get verified, then talk to a stranger. Text, photos, voice, and GIFs.",
+  icons: {
+    icon: "/brand/logo.jpg",
+    apple: "/brand/logo.jpg",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -24,7 +28,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-bg text-text">{children}</body>
+      <body className="min-h-full flex flex-col text-text">{children}</body>
     </html>
   );
 }

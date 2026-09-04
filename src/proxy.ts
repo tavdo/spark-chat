@@ -63,6 +63,7 @@ export const config = {
     "/api/admin/:path*",
     "/api/profile/:path*",
     "/api/upload/:path*",
+    "/api/chat/:path*",
     "/api/verification/:path*",
     "/api/giphy/:path*",
     "/api/media/:path*",

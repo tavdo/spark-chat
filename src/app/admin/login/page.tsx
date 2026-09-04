@@ -37,7 +37,7 @@ export default function AdminLoginPage() {
   }
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-bg p-6">
+    <div className="glow-bg flex min-h-full items-center justify-center p-6">
       <Card className="w-full max-w-md space-y-6">
         <Link href="/">
           <SparkMark />

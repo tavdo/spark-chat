@@ -1,5 +1,23 @@
 import Link from "next/link";
-import { Button, SparkMark } from "@/components/ui";
+import { BrandArt, Button, SparkMark } from "@/components/ui";
+
+const features = [
+  {
+    src: "/brand/logo.jpg",
+    title: "Instant chat",
+    body: "Get paired with a verified stranger. Skip whenever you want.",
+  },
+  {
+    src: "/brand/logo-glow.jpg",
+    title: "Live matching",
+    body: "One-on-one text, photos, voice notes, and GIFs — no feed.",
+  },
+  {
+    src: "/brand/shield.jpg",
+    title: "Face verified",
+    body: "Live webcam check plus admin review before anyone enters chat.",
+  },
+];
 
 export default function Home() {
   return (
@@ -15,7 +33,17 @@ export default function Home() {
           </Link>
         </div>
       </header>
-      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 pb-24 pt-10 text-center">
+      <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-6 pb-24 pt-6 text-center">
+        <BrandArt
+          src="/brand/logo.jpg"
+          alt=""
+          className="mb-4 h-28 w-28 rounded-3xl object-cover ring-1 ring-accent/20 sm:h-36 sm:w-36"
+        />
+        <BrandArt
+          src="/brand/wordmark.jpg"
+          alt="SPARK"
+          className="mb-6 h-14 w-auto max-w-[min(100%,420px)] object-contain mix-blend-screen sm:h-16"
+        />
         <p className="mb-4 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-accent">
           Verified random chat
         </p>
@@ -42,11 +70,27 @@ export default function Home() {
             Open the admin panel
           </Link>
         </p>
-        <div className="mt-16 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="mt-16 grid w-full max-w-4xl gap-4 sm:grid-cols-3">
+          {features.map((item) => (
+            <div
+              key={item.title}
+              className="rounded-3xl border border-border bg-surface/70 px-4 py-6 backdrop-blur-xl"
+            >
+              <BrandArt
+                src={item.src}
+                alt=""
+                className="mx-auto mb-4 h-20 w-20 rounded-2xl object-cover ring-1 ring-accent/20"
+              />
+              <p className="font-semibold">{item.title}</p>
+              <p className="mt-2 text-sm text-muted">{item.body}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-8 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
           {["Text", "Photo", "Voice", "GIFs"].map((item) => (
             <div
               key={item}
-              className="rounded-2xl border border-border bg-surface/70 px-4 py-5 text-sm font-medium"
+              className="rounded-2xl border border-border bg-surface/70 px-4 py-5 text-sm font-medium backdrop-blur-xl"
             >
               {item}
             </div>

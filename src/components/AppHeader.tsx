@@ -8,7 +8,7 @@ export function AppHeader({
   right?: ReactNode;
 }) {
   return (
-    <header className="flex items-center justify-between border-b border-border px-5 py-4">
+    <header className="flex items-center justify-between border-b border-border bg-black/25 px-5 py-4 backdrop-blur-md">
       <Link href="/">
         <SparkMark />
       </Link>

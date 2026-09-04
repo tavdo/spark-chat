@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Card, Field, Input, SparkMark } from "@/components/ui";
+import { Button, Card, Field, Input, SparkMark, BrandArt } from "@/components/ui";
 import { WebcamCapture } from "@/components/WebcamCapture";
 
 export default function RegisterPage() {
@@ -37,20 +37,25 @@ export default function RegisterPage() {
     }
     setPending(true);
     setError(null);
-    const form = new FormData();
-    Object.entries(details).forEach(([k, v]) => form.set(k, v));
-    form.set("verificationPhoto", photo, "face.jpg");
-    const res = await fetch("/api/auth/register", { method: "POST", body: form });
-    const data = await res.json();
-    setPending(false);
-    if (!res.ok) {
-      setError(data.error || "Could not create account");
-      return;
-    }
-    if (data.user?.verificationStatus === "APPROVED") {
-      router.push("/chat");
-    } else {
-      router.push("/pending");
+    try {
+      const form = new FormData();
+      Object.entries(details).forEach(([k, v]) => form.set(k, v));
+      form.set("verificationPhoto", photo, "face.jpg");
+      const res = await fetch("/api/auth/register", { method: "POST", body: form });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Could not create account");
+        return;
+      }
+      if (data.user?.verificationStatus === "APPROVED") {
+        router.push("/chat");
+      } else {
+        router.push("/pending");
+      }
+    } catch {
+      setError("Network error. Try again.");
+    } finally {
+      setPending(false);
     }
   }
 
@@ -61,6 +66,13 @@ export default function RegisterPage() {
           <SparkMark />
         </Link>
         <div>
+          {step === 2 && (
+            <BrandArt
+              src="/brand/shield.jpg"
+              alt=""
+              className="mb-3 h-16 w-16 rounded-2xl object-cover ring-1 ring-accent/20"
+            />
+          )}
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
             Step {step} of 2
           </p>

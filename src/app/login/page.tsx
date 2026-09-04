@@ -15,28 +15,33 @@ export default function LoginPage() {
     setError(null);
     setPending(true);
     const form = new FormData(e.currentTarget);
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: form.get("email"),
-        password: form.get("password"),
-      }),
-    });
-    const data = await res.json();
-    setPending(false);
-    if (!res.ok) {
-      setError(data.error || "Could not sign in");
-      return;
-    }
-    if (data.user?.role === "ADMIN") {
-      router.push("/admin");
-      return;
-    }
-    if (data.user?.verificationStatus === "APPROVED") {
-      router.push("/chat");
-    } else {
-      router.push("/pending");
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: form.get("email"),
+          password: form.get("password"),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || "Could not sign in");
+        return;
+      }
+      if (data.user?.role === "ADMIN") {
+        router.push("/admin");
+        return;
+      }
+      if (data.user?.verificationStatus === "APPROVED") {
+        router.push("/chat");
+      } else {
+        router.push("/pending");
+      }
+    } catch {
+      setError("Network error. Try again.");
+    } finally {
+      setPending(false);
     }
   }
 

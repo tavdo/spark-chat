@@ -41,7 +41,12 @@ export async function POST(req: NextRequest) {
   if (existing) return error("An account with that email already exists", 409);
 
   const key = mediaKey("verification", extFromMime(photo.type, "jpg"));
-  await putObject(key, Buffer.from(await photo.arrayBuffer()), photo.type);
+  try {
+    await putObject(key, Buffer.from(await photo.arrayBuffer()), photo.type);
+  } catch (err) {
+    console.error("register upload failed", err);
+    return error("Could not save verification photo. Try again.", 500);
+  }
 
   const autoApprove = process.env.DEV_AUTO_APPROVE === "true";
   const user = await prisma.user.create({

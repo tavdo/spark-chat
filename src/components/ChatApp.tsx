@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { io, type Socket } from "socket.io-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -15,7 +14,7 @@ import {
   Sticker,
   Square,
 } from "lucide-react";
-import { Button, SparkMark } from "./ui";
+import { BrandArt, Button, SparkMark } from "./ui";
 import { REPORT_REASONS } from "@/lib/constants";
 import { cn, formatGender } from "@/lib/utils";
 
@@ -37,17 +36,33 @@ type Stranger = {
   avatarUrl: string | null;
 };
 
+type Session = {
+  phase: Phase | "searching" | "idle" | "chatting" | "ended";
+  chatId: string | null;
+  stranger: Stranger | null;
+  typing?: boolean;
+  messages?: ChatMessage[];
+  error?: string;
+};
+
+function mergeMessages(curr: ChatMessage[], incoming: ChatMessage[]) {
+  const seen = new Set(curr.map((m) => m.id));
+  const next = [...curr];
+  for (const msg of incoming) {
+    if (!seen.has(msg.id)) next.push(msg);
+  }
+  return next;
+}
+
 export function ChatApp({
   me,
 }: {
   me: { id: string; nickname: string; avatarUrl: string | null };
 }) {
   const router = useRouter();
-  const socketRef = useRef<Socket | null>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [phase, setPhase] = useState<Phase>("idle");
-  const [chatId, setChatId] = useState<string | null>(null);
   const [stranger, setStranger] = useState<Stranger | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [text, setText] = useState("");
@@ -59,50 +74,96 @@ export function ChatApp({
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const peaksRef = useRef<number[]>([]);
+  const sinceRef = useRef<string | null>(null);
+  const chatIdRef = useRef<string | null>(null);
+  const phaseRef = useRef<Phase>("idle");
 
-  useEffect(() => {
-    const socket = io({ path: "/socket.io", withCredentials: true });
-    socketRef.current = socket;
-
-    socket.on("queue:waiting", () => {
-      setPhase("searching");
+  function applySession(data: Session) {
+    if (data.error?.includes("under review")) {
+      router.push("/pending");
+      return;
+    }
+    if (data.phase === "chatting" && data.chatId) {
+      if (chatIdRef.current !== data.chatId) {
+        chatIdRef.current = data.chatId;
+        setMessages([]);
+        sinceRef.current = null;
+      }
+      setStranger(data.stranger);
+      setTyping(Boolean(data.typing));
+      phaseRef.current = "chatting";
+      setPhase("chatting");
+      if (data.messages?.length) {
+        setMessages((curr) => {
+          const merged = mergeMessages(curr, data.messages || []);
+          const last = merged[merged.length - 1];
+          if (last) sinceRef.current = last.createdAt;
+          return merged;
+        });
+      }
+      return;
+    }
+    if (data.phase === "searching") {
+      chatIdRef.current = null;
+      sinceRef.current = null;
       setStranger(null);
       setMessages([]);
-      setChatId(null);
-    });
-
-    socket.on("queue:left", () => {
-      setPhase("idle");
-    });
-
-    socket.on("chat:matched", (payload: { chatId: string; stranger: Stranger }) => {
-      setChatId(payload.chatId);
-      setStranger(payload.stranger);
-      setMessages([]);
-      setPhase("chatting");
       setTyping(false);
-    });
-
-    socket.on("chat:message", (msg: ChatMessage) => {
-      setMessages((curr) => [...curr, msg]);
-    });
-
-    socket.on("chat:typing", (payload: { typing: boolean }) => {
-      setTyping(payload.typing);
-    });
-
-    socket.on("chat:ended", () => {
+      phaseRef.current = "searching";
+      setPhase("searching");
+      return;
+    }
+    if (data.phase === "ended" || (data.phase === "idle" && phaseRef.current === "chatting")) {
+      chatIdRef.current = null;
+      setTyping(false);
+      phaseRef.current = "ended";
       setPhase("ended");
-      setTyping(false);
-      setChatId(null);
-    });
+      return;
+    }
+    if (data.phase === "idle" && phaseRef.current !== "ended") {
+      phaseRef.current = "idle";
+      setPhase("idle");
+    }
+  }
 
-    socket.on("error", (payload: { message?: string }) => {
-      if (payload.message?.includes("under review")) router.push("/pending");
+  async function postSession(body: Record<string, unknown>) {
+    const res = await fetch("/api/chat/session", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     });
+    const data = (await res.json().catch(() => ({}))) as Session;
+    if (res.status === 403 && data.error?.includes("under review")) {
+      router.push("/pending");
+      return data;
+    }
+    applySession(data);
+    return data;
+  }
 
+  useEffect(() => {
+    let cancelled = false;
+    async function poll() {
+      const params = sinceRef.current
+        ? `?since=${encodeURIComponent(sinceRef.current)}`
+        : "";
+      const res = await fetch(`/api/chat/session${params}`, { credentials: "include" });
+      if (!res.ok || cancelled) {
+        if (res.status === 403) {
+          const data = await res.json().catch(() => ({}));
+          if (String(data.error || "").includes("under review")) router.push("/pending");
+        }
+        return;
+      }
+      const data = (await res.json()) as Session;
+      if (!cancelled) applySession(data);
+    }
+    const id = setInterval(() => void poll(), 1200);
+    void poll();
     return () => {
-      socket.disconnect();
+      cancelled = true;
+      clearInterval(id);
     };
   }, [router]);
 
@@ -111,34 +172,44 @@ export function ChatApp({
   }, [messages, typing]);
 
   function start() {
-    socketRef.current?.emit("queue:join");
+    void postSession({ action: "join" });
   }
 
   function skip() {
+    setMenuOpen(false);
     if (phase === "searching") {
-      socketRef.current?.emit("queue:leave");
-      setPhase("idle");
-      setMenuOpen(false);
+      void postSession({ action: "skip", searching: true });
       return;
     }
-    socketRef.current?.emit("chat:skip");
-    setMenuOpen(false);
+    void postSession({ action: "skip" });
   }
 
   function block() {
-    socketRef.current?.emit("chat:block");
     setMenuOpen(false);
-    setPhase("idle");
+    void postSession({ action: "block" });
     setStranger(null);
     setMessages([]);
   }
 
-  function sendText() {
+  async function sendText() {
     const content = text.trim();
     if (!content || phase !== "chatting") return;
-    socketRef.current?.emit("chat:message", { chatId, type: "TEXT", content });
     setText("");
-    socketRef.current?.emit("chat:typing", { chatId, typing: false });
+    void postSession({ action: "typing", typing: false });
+    const res = await fetch("/api/chat/message", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "TEXT", content }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (data.message) {
+      setMessages((curr) => {
+        const merged = mergeMessages(curr, [data.message]);
+        sinceRef.current = data.message.createdAt;
+        return merged;
+      });
+    }
   }
 
   async function sendFile(file: File, kind: "photo" | "voice", waveform: number[] = []) {
@@ -148,12 +219,24 @@ export function ChatApp({
     const res = await fetch("/api/upload", { method: "POST", body: form });
     const data = await res.json();
     if (!res.ok) return;
-    socketRef.current?.emit("chat:message", {
-      chatId,
-      type: data.type,
-      content: data.url,
-      waveform,
+    const sent = await fetch("/api/chat/message", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: data.type,
+        content: data.url,
+        waveform,
+      }),
     });
+    const payload = await sent.json().catch(() => ({}));
+    if (payload.message) {
+      setMessages((curr) => {
+        const merged = mergeMessages(curr, [payload.message]);
+        sinceRef.current = payload.message.createdAt;
+        return merged;
+      });
+    }
   }
 
   async function toggleRecord() {
@@ -207,8 +290,8 @@ export function ChatApp({
   }, [phase, stranger]);
 
   return (
-    <div className="flex h-screen flex-col bg-bg">
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
+    <div className="flex h-screen flex-col bg-black/35">
+      <header className="flex items-center justify-between border-b border-border bg-black/25 px-4 py-3 backdrop-blur-md">
         <Link href="/">
           <SparkMark />
         </Link>
@@ -261,11 +344,12 @@ export function ChatApp({
         </div>
       </header>
 
-      <div className="border-b border-border px-4 py-2 text-sm text-muted">{statusLabel}</div>
+      <div className="border-b border-border bg-black/20 px-4 py-2 text-sm text-muted backdrop-blur-md">{statusLabel}</div>
 
       <div ref={scrollerRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-6">
         {phase === "idle" && (
           <EmptyState
+            art="/brand/logo.jpg"
             title="Talk to someone new"
             body="You'll be paired with a verified stranger. Skip is instant."
             action="Start chat"
@@ -273,10 +357,16 @@ export function ChatApp({
           />
         )}
         {phase === "searching" && (
-          <EmptyState title="Connecting..." body="Looking for the next available stranger." />
+          <EmptyState
+            art="/brand/logo-glow.jpg"
+            pulse
+            title="Connecting..."
+            body="Looking for the next available stranger."
+          />
         )}
         {phase === "ended" && (
           <EmptyState
+            art="/brand/logo.jpg"
             title="Stranger disconnected"
             body="Jump back in whenever you're ready."
             action="Next stranger"
@@ -299,7 +389,7 @@ export function ChatApp({
       </div>
 
       <form
-        className="flex items-end gap-2 border-t border-border p-3"
+        className="flex items-end gap-2 border-t border-border bg-black/25 p-3 backdrop-blur-md"
         onSubmit={(e) => {
           e.preventDefault();
           sendText();
@@ -330,7 +420,7 @@ export function ChatApp({
           disabled={phase !== "chatting"}
           onChange={(e) => {
             setText(e.target.value);
-            socketRef.current?.emit("chat:typing", { chatId, typing: e.target.value.length > 0 });
+            void postSession({ action: "typing", typing: e.target.value.length > 0 });
           }}
           placeholder={recording ? "Recording voice..." : "Say something"}
           className="flex-1 rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm outline-none focus:border-accent"
@@ -344,8 +434,23 @@ export function ChatApp({
         <GifPicker
           onClose={() => setGifOpen(false)}
           onPick={(url) => {
-            socketRef.current?.emit("chat:message", { chatId, type: "GIF", content: url });
             setGifOpen(false);
+            void fetch("/api/chat/message", {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "GIF", content: url }),
+            })
+              .then((r) => r.json())
+              .then((payload) => {
+                if (payload.message) {
+                  setMessages((curr) => {
+                    const merged = mergeMessages(curr, [payload.message]);
+                    sinceRef.current = payload.message.createdAt;
+                    return merged;
+                  });
+                }
+              });
           }}
         />
       )}
@@ -354,9 +459,10 @@ export function ChatApp({
         <ReportModal
           onClose={() => setReportOpen(false)}
           onSubmit={(reason, details) => {
-            socketRef.current?.emit("chat:report", { reason, details });
-            setReportOpen(false);
-            skip();
+            void postSession({ action: "report", reason, details }).then(() => {
+              setReportOpen(false);
+              skip();
+            });
           }}
         />
       )}
@@ -365,11 +471,15 @@ export function ChatApp({
 }
 
 function EmptyState({
+  art,
+  pulse,
   title,
   body,
   action,
   onAction,
 }: {
+  art: string;
+  pulse?: boolean;
   title: string;
   body: string;
   action?: string;
@@ -377,7 +487,11 @@ function EmptyState({
 }) {
   return (
     <div className="flex h-full flex-col items-center justify-center text-center">
-      <div className={cn("mb-5 h-16 w-16 rounded-full bg-accent/20", title.includes("Connecting") && "pulse-ring")} />
+      <BrandArt
+        src={art}
+        alt=""
+        className={cn("mb-5 h-20 w-20 rounded-2xl object-cover ring-1 ring-accent/20", pulse && "pulse-ring")}
+      />
       <h2 className="text-2xl font-semibold">{title}</h2>
       <p className="mt-2 max-w-sm text-sm text-muted">{body}</p>
       {action && onAction && (

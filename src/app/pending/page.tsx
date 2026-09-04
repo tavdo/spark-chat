@@ -3,9 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
-import { Button, Card } from "@/components/ui";
+import { BrandArt, Button, Card } from "@/components/ui";
 import { WebcamCapture } from "@/components/WebcamCapture";
-import { ShieldAlert, ShieldQuestion } from "lucide-react";
 
 type Me = {
   nickname: string;
@@ -78,9 +77,11 @@ export default function PendingPage() {
       />
       <main className="mx-auto max-w-lg px-6 py-16">
         <Card className="space-y-5 text-center">
-          <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-accent/15 text-accent">
-            {rejected ? <ShieldAlert /> : <ShieldQuestion />}
-          </div>
+          <BrandArt
+            src="/brand/shield.jpg"
+            alt=""
+            className="mx-auto h-20 w-20 rounded-2xl object-cover ring-1 ring-accent/20"
+          />
           <h1 className="text-2xl font-semibold">
             {rejected ? "Verification was rejected" : "Your account is under review"}
           </h1>

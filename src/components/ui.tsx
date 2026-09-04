@@ -1,12 +1,29 @@
 import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 
+export function BrandArt({
+  src,
+  alt = "",
+  className,
+}: {
+  src: string;
+  alt?: string;
+  className?: string;
+}) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt={alt} className={className} />
+  );
+}
+
 export function SparkMark({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
-      <span className="grid h-8 w-8 place-items-center rounded-xl bg-accent-strong text-sm font-bold text-white shadow-[0_0_24px_rgba(168,85,247,0.45)]">
-        S
-      </span>
+      <BrandArt
+        src="/brand/logo.jpg"
+        alt="Spark"
+        className="h-9 w-9 rounded-xl object-cover ring-1 ring-accent/25"
+      />
       <span className="text-lg font-semibold tracking-tight">Spark</span>
     </div>
   );
@@ -76,7 +93,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-3xl border border-border bg-surface/90 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)]",
+        "rounded-3xl border border-border bg-surface/80 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.45)] backdrop-blur-xl",
         className
       )}
     >

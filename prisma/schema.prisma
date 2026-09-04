@@ -96,10 +96,27 @@ model User {
   chatsAsUserA    Chat[]    @relation("ChatUserA")
   chatsAsUserB    Chat[]    @relation("ChatUserB")
   actionsTaken    Report[]  @relation("Moderator")
+  matchQueue      MatchQueue?
 
   @@index([verificationStatus])
   @@index([status])
   @@index([nickname])
+}
+
+model MatchQueue {
+  userId    String   @id
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+}
+
+model StoredFile {
+  key         String   @id
+  contentType String
+  data        Bytes
+  createdAt   DateTime @default(now())
 }
 
 model Chat {
@@ -109,6 +126,10 @@ model Chat {
   status    ChatStatus @default(ACTIVE)
   createdAt DateTime   @default(now())
   endedAt   DateTime?
+  lastSeenA DateTime   @default(now())
+  lastSeenB DateTime   @default(now())
+  typingA   Boolean    @default(false)
+  typingB   Boolean    @default(false)
 
   userA    User      @relation("ChatUserA", fields: [userAId], references: [id])
   userB    User      @relation("ChatUserB", fields: [userBId], references: [id])
