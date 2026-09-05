@@ -50,7 +50,7 @@ To test matchmaking, sign in as Alex and Jordan in two different browsers (or on
 
 Set `DEV_AUTO_APPROVE=true` in `.env` if you want new webcam signups to skip the admin queue locally.
 
-Add a [Giphy API key](https://developers.giphy.com/) as `GIPHY_API_KEY` to enable GIF search.
+Add a [Klipy API key](https://docs.klipy.com/) as `KLIPY_API_KEY` to enable GIF search.
 
 ## Routes
 
@@ -81,7 +81,7 @@ Import the GitHub repo in [Vercel](https://vercel.com/new). Set these environmen
 - `DATABASE_URL` — hosted Postgres (Neon, Supabase, or Vercel Postgres). Local `localhost` will not work on Vercel.
 - `JWT_SECRET` — long random string
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — first admin after you run seed against the hosted DB
-- `GIPHY_API_KEY` — optional
+- `KLIPY_API_KEY` — optional GIF search
 - `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_REGION` — required on Vercel for photos/voice (the serverless filesystem is not writable)
 
 After the first deploy, run migrations against the hosted database:

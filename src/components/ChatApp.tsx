@@ -631,7 +631,7 @@ function GifPicker({
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search GIFs"
+            placeholder="Search KLIPY"
             className="flex-1 rounded-xl bg-surface-2 px-3 py-2 text-sm outline-none"
           />
           <Button variant="ghost" onClick={onClose}>
@@ -640,7 +640,7 @@ function GifPicker({
         </div>
         {!configured && (
           <p className="p-4 text-sm text-muted">
-            Add a GIPHY_API_KEY to enable GIF search.
+            Add a KLIPY_API_KEY to enable GIF search.
           </p>
         )}
         <div className="grid grid-cols-3 gap-2 overflow-y-auto p-3">
