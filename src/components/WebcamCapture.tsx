@@ -95,7 +95,7 @@ export function WebcamCapture({ onCapture, previewUrl }: Props) {
       {error && <p className="text-sm text-danger">{error}</p>}
       <div className="flex justify-center gap-3">
         {shot ? (
-          <Button type="button" variant="ghost" onClick={retake}>
+          <Button type="button" className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]" onClick={retake}>
             <RefreshCcw className="h-4 w-4" />
             Retake
           </Button>

@@ -1,14 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Card, Field, Input, SparkMark } from "@/components/ui";
+import { Lock, Mail } from "lucide-react";
+import { AuthButton, AuthCard, AuthInput } from "@/components/AuthCard";
 
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [remember, setRemember] = useState(true);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -46,34 +47,45 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="glow-bg flex min-h-full items-center justify-center p-6">
-      <Card className="w-full max-w-md space-y-6">
-        <Link href="/">
-          <SparkMark />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-semibold">Welcome back</h1>
-          <p className="mt-1 text-sm text-muted">Sign in to jump into a chat.</p>
+    <AuthCard
+      mode="login"
+      title="Welcome to Spark"
+      subtitle="Sign in and jump into a one-on-one chat with someone new."
+      formTitle="USER LOGIN"
+    >
+      <form className="space-y-4" onSubmit={onSubmit}>
+        <AuthInput
+          name="email"
+          type="email"
+          required
+          placeholder="Email"
+          autoComplete={remember ? "email" : "off"}
+          icon={<Mail className="h-4 w-4" />}
+        />
+        <AuthInput
+          name="password"
+          type="password"
+          required
+          placeholder="Password"
+          autoComplete={remember ? "current-password" : "off"}
+          icon={<Lock className="h-4 w-4" />}
+        />
+        <div className="flex items-center justify-between px-1 text-sm">
+          <label className="flex cursor-pointer items-center gap-2 text-[#7c3aed]">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              className="h-4 w-4 accent-[#7c3aed]"
+            />
+            Remember
+          </label>
         </div>
-        <form className="space-y-4" onSubmit={onSubmit}>
-          <Field label="Email">
-            <Input name="email" type="email" required placeholder="you@email.com" />
-          </Field>
-          <Field label="Password">
-            <Input name="password" type="password" required />
-          </Field>
-          {error && <p className="text-sm text-danger">{error}</p>}
-          <Button className="w-full" disabled={pending}>
-            {pending ? "Signing in..." : "Sign in"}
-          </Button>
-        </form>
-        <p className="text-sm text-muted">
-          New here?{" "}
-          <Link href="/register" className="text-accent hover:underline">
-            Create an account
-          </Link>
-        </p>
-      </Card>
-    </div>
+        {error && <p className="text-center text-sm text-rose-500">{error}</p>}
+        <div className="pt-2">
+          <AuthButton disabled={pending}>{pending ? "SIGNING IN..." : "LOGIN"}</AuthButton>
+        </div>
+      </form>
+    </AuthCard>
   );
 }
