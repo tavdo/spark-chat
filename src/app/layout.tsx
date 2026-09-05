@@ -16,10 +16,6 @@ export const metadata: Metadata = {
   title: "Spark — verified random chat",
   description:
     "Send a selfie and talk to a stranger. Text, photos, voice, and GIFs.",
-  icons: {
-    icon: "/brand/logo.jpg",
-    apple: "/brand/logo.jpg",
-  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
