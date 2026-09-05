@@ -45,6 +45,11 @@ type Session = {
   error?: string;
 };
 
+function isBlockedFromChat(message?: string) {
+  const text = (message || "").toLowerCase();
+  return text.includes("rejected") || text.includes("banned") || text.includes("suspended");
+}
+
 function mergeMessages(curr: ChatMessage[], incoming: ChatMessage[]) {
   const seen = new Set(curr.map((m) => m.id));
   const next = [...curr];
@@ -79,7 +84,7 @@ export function ChatApp({
   const phaseRef = useRef<Phase>("idle");
 
   function applySession(data: Session) {
-    if (data.error?.includes("under review")) {
+    if (isBlockedFromChat(data.error)) {
       router.push("/pending");
       return;
     }
@@ -134,7 +139,7 @@ export function ChatApp({
       body: JSON.stringify(body),
     });
     const data = (await res.json().catch(() => ({}))) as Session;
-    if (res.status === 403 && data.error?.includes("under review")) {
+    if (res.status === 403 && isBlockedFromChat(data.error)) {
       router.push("/pending");
       return data;
     }
@@ -152,7 +157,7 @@ export function ChatApp({
       if (!res.ok || cancelled) {
         if (res.status === 403) {
           const data = await res.json().catch(() => ({}));
-          if (String(data.error || "").includes("under review")) router.push("/pending");
+          if (isBlockedFromChat(String(data.error || ""))) router.push("/pending");
         }
         return;
       }

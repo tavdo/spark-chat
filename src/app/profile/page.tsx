@@ -84,7 +84,8 @@ export default function ProfilePage() {
     setUser((u) =>
       u ? { ...u, verificationStatus: "PENDING", verificationRejectReason: null } : u
     );
-    setMessage("Photo submitted for review");
+    setMessage("Photo submitted. You can chat again now.");
+    router.push("/chat");
   }
 
   async function logout() {
@@ -99,7 +100,7 @@ export default function ProfilePage() {
       <AppHeader
         right={
           <>
-            {user.verificationStatus === "APPROVED" && (
+            {user.verificationStatus !== "REJECTED" && (
               <Link href="/chat">
                 <Button>Chat</Button>
               </Link>
@@ -140,12 +141,14 @@ export default function ProfilePage() {
               <h2 className="text-lg font-semibold">Verification</h2>
               {user.verificationStatus === "PENDING" && (
                 <p className="text-sm text-muted">
-                  Your account is under review. You cannot enter the chat queue until an admin approves your photo.
+                  You can chat now. An admin still reviews your selfie and can block the account if it is rejected.
                 </p>
               )}
               {user.verificationStatus === "REJECTED" && (
                 <>
-                  <p className="text-sm text-danger">{user.verificationRejectReason}</p>
+                  <p className="text-sm text-danger">
+                    {user.verificationRejectReason || "Your photo was rejected. You are blocked from chat."}
+                  </p>
                   <WebcamCapture onCapture={setPhoto} />
                   <Button onClick={resubmit} disabled={!photo}>
                     Resubmit photo

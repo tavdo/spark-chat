@@ -103,8 +103,8 @@ export async function joinQueue(userId: string) {
   if (!user || !canChat(user)) {
     return {
       error:
-        user?.verificationStatus !== "APPROVED"
-          ? "Your account is under review"
+        user?.verificationStatus === "REJECTED"
+          ? "Your verification was rejected"
           : "You cannot join chat right now",
     };
   }
@@ -123,6 +123,12 @@ export async function joinQueue(userId: string) {
 
 export async function leaveQueue(userId: string) {
   await prisma.matchQueue.delete({ where: { userId } }).catch(() => null);
+}
+
+export async function kickUserFromChat(userId: string) {
+  await leaveQueue(userId);
+  const chat = await findActiveChat(userId);
+  if (chat) await endChat(chat.id);
 }
 
 async function chatPayload(chat: NonNullable<Awaited<ReturnType<typeof findActiveChat>>>, userId: string) {

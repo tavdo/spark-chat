@@ -32,7 +32,7 @@ export default function PendingPage() {
           router.push("/banned");
           return;
         }
-        if (data.user.verificationStatus === "APPROVED") {
+        if (data.user.verificationStatus !== "REJECTED") {
           router.push("/chat");
           return;
         }
@@ -53,8 +53,8 @@ export default function PendingPage() {
       setError(data.error || "Could not resubmit");
       return;
     }
-    setMe((m) => (m ? { ...m, verificationStatus: "PENDING", verificationRejectReason: null } : m));
     setPhoto(null);
+    router.push("/chat");
   }
 
   async function logout() {
@@ -63,8 +63,6 @@ export default function PendingPage() {
   }
 
   if (!me) return null;
-
-  const rejected = me.verificationStatus === "REJECTED";
 
   return (
     <div className="glow-bg min-h-full">
@@ -82,28 +80,22 @@ export default function PendingPage() {
             alt=""
             className="mx-auto h-20 w-20 rounded-2xl object-cover ring-1 ring-accent/20"
           />
-          <h1 className="text-2xl font-semibold">
-            {rejected ? "Verification was rejected" : "Your account is under review"}
-          </h1>
+          <h1 className="text-2xl font-semibold">You were blocked from chat</h1>
           <p className="text-sm text-muted">
-            {rejected
-              ? "You cannot enter chat until a new photo is approved."
-              : `Thanks ${me.nickname}. An admin will check your face photo and stated gender. This usually does not take long.`}
+            An admin rejected your selfie. Send a new live photo to get back in — you can chat again as soon as it is submitted.
           </p>
-          {rejected && me.verificationRejectReason && (
+          {me.verificationRejectReason && (
             <p className="rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">
               {me.verificationRejectReason}
             </p>
           )}
-          {rejected && (
-            <div className="space-y-4 text-left">
-              <WebcamCapture onCapture={setPhoto} />
-              {error && <p className="text-sm text-danger">{error}</p>}
-              <Button className="w-full" disabled={!photo || pending} onClick={resubmit}>
-                {pending ? "Sending..." : "Resubmit photo"}
-              </Button>
-            </div>
-          )}
+          <div className="space-y-4 text-left">
+            <WebcamCapture onCapture={setPhoto} />
+            {error && <p className="text-sm text-danger">{error}</p>}
+            <Button className="w-full" disabled={!photo || pending} onClick={resubmit}>
+              {pending ? "Sending..." : "Resubmit photo"}
+            </Button>
+          </div>
         </Card>
       </main>
     </div>

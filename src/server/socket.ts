@@ -146,8 +146,8 @@ async function joinQueue(io: Server, socket: Socket, userId: string) {
   if (!user || !canChat(user)) {
     socket.emit("error", {
       message:
-        user?.verificationStatus !== "APPROVED"
-          ? "Your account is under review"
+        user?.verificationStatus === "REJECTED"
+          ? "Your verification was rejected"
           : "You cannot join chat right now",
     });
     return;

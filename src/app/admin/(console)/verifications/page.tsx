@@ -58,7 +58,7 @@ export default function AdminVerificationPage() {
         <div>
           <h1 className="text-2xl font-semibold">Verification queue</h1>
           <p className="text-sm text-muted">
-            Compare the live face photo with the stated gender, then approve or reject.
+            Users can chat while pending. Rejecting a photo blocks them from chat immediately.
           </p>
         </div>
         <FilterTabs

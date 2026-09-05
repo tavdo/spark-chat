@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Spark — verified random chat",
   description:
-    "Get verified, then talk to a stranger. Text, photos, voice, and GIFs.",
+    "Send a selfie and talk to a stranger. Text, photos, voice, and GIFs.",
   icons: {
     icon: "/brand/logo.jpg",
     apple: "/brand/logo.jpg",

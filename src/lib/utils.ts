@@ -54,7 +54,7 @@ export function canChat(user: {
   status: string;
   suspendUntil: Date | null;
 }) {
-  if (user.verificationStatus !== "APPROVED") return false;
+  if (user.verificationStatus === "REJECTED") return false;
   if (user.status === "BANNED") return false;
   if (user.status === "SUSPENDED") {
     if (!user.suspendUntil) return false;

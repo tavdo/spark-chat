@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { error, json, withAdmin } from "@/lib/api";
 import { rejectSchema } from "@/lib/validators";
+import { kickUserFromChat } from "@/lib/matchmaking";
 import type { VerificationStatus } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
@@ -63,5 +64,6 @@ export async function POST(req: NextRequest) {
       verificationRejectReason: parsed.data.reason,
     },
   });
+  await kickUserFromChat(id);
   return json({ ok: true, verificationStatus: updated.verificationStatus });
 }

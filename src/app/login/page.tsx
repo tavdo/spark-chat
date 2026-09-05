@@ -33,10 +33,10 @@ export default function LoginPage() {
         router.push("/admin");
         return;
       }
-      if (data.user?.verificationStatus === "APPROVED") {
-        router.push("/chat");
-      } else {
+      if (data.user?.verificationStatus === "REJECTED") {
         router.push("/pending");
+      } else {
+        router.push("/chat");
       }
     } catch {
       setError("Network error. Try again.");

@@ -23,10 +23,10 @@ export async function withVerified() {
   const result = await withUser();
   if (!result.user) return result;
   if (!canChat(result.user)) {
-    if (result.user.verificationStatus !== "APPROVED") {
+    if (result.user.verificationStatus === "REJECTED") {
       return {
         user: null,
-        response: error("Account is not verified", 403),
+        response: error("Your verification was rejected", 403),
       };
     }
     if (isSuspended(result.user)) {

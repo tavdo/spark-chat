@@ -47,11 +47,7 @@ export default function RegisterPage() {
         setError(data.error || "Could not create account");
         return;
       }
-      if (data.user?.verificationStatus === "APPROVED") {
-        router.push("/chat");
-      } else {
-        router.push("/pending");
-      }
+      router.push("/chat");
     } catch {
       setError("Network error. Try again.");
     } finally {
@@ -81,8 +77,8 @@ export default function RegisterPage() {
           </h1>
           <p className="mt-1 text-sm text-muted">
             {step === 1
-              ? "A few details first. You cannot join chat until an admin approves your photo."
-              : "Look at the camera. File uploads are disabled to reduce fake photos."}
+              ? "A few details first. After your selfie you can start chatting right away."
+              : "Look at the camera. You can chat immediately — an admin may review this later and block a rejected account."}
           </p>
         </div>
 

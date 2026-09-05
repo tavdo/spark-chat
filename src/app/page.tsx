@@ -5,7 +5,7 @@ const features = [
   {
     src: "/brand/logo.jpg",
     title: "Instant chat",
-    body: "Get paired with a verified stranger. Skip whenever you want.",
+    body: "Send a selfie and talk to a stranger right away. Skip whenever you want.",
   },
   {
     src: "/brand/logo-glow.jpg",
@@ -14,8 +14,8 @@ const features = [
   },
   {
     src: "/brand/shield.jpg",
-    title: "Face verified",
-    body: "Live webcam check plus admin review before anyone enters chat.",
+    title: "Selfie first",
+    body: "No waiting on admin. If a photo is rejected later, that account is blocked from chat.",
   },
 ];
 
@@ -29,7 +29,7 @@ export default function Home() {
             <Button variant="ghost">Sign in</Button>
           </Link>
           <Link href="/register">
-            <Button>Get verified</Button>
+            <Button>Join now</Button>
           </Link>
         </div>
       </header>
@@ -52,7 +52,7 @@ export default function Home() {
           <span className="block text-accent">Skip anytime.</span>
         </h1>
         <p className="mt-6 max-w-xl text-lg text-muted">
-          Face-verified people only. One-on-one text, photos, voice notes, and GIFs — no feed, no followers, no waiting around.
+          Send a live selfie, then jump into one-on-one text, photos, voice, and GIFs. No waiting on admin approval.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Link href="/register">
