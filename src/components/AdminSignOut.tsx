@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "./ui";
 
 export function AdminSignOut() {
+  const { t } = useI18n();
   const router = useRouter();
   return (
     <Button
@@ -14,7 +16,7 @@ export function AdminSignOut() {
         router.push("/admin/login");
       }}
     >
-      Sign out
+      {t("common.signOut")}
     </Button>
   );
 }

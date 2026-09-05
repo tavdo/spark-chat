@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Mail } from "lucide-react";
 import { AuthButton, AuthCard, AuthInput } from "@/components/AuthCard";
+import { useI18n } from "@/lib/i18n";
 
 export default function LoginPage() {
+  const { t, tError } = useI18n();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -27,7 +29,7 @@ export default function LoginPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(data.error || "Could not sign in");
+        setError(tError(data.error, "auth.couldNotSignIn"));
         return;
       }
       if (data.user?.role === "ADMIN") {
@@ -40,7 +42,7 @@ export default function LoginPage() {
         router.push("/chat");
       }
     } catch {
-      setError("Network error. Try again.");
+      setError(t("common.networkError"));
     } finally {
       setPending(false);
     }
@@ -49,16 +51,16 @@ export default function LoginPage() {
   return (
     <AuthCard
       mode="login"
-      title="Welcome to Spark"
-      subtitle="Sign in and jump into a one-on-one chat with someone new."
-      formTitle="USER LOGIN"
+      title={t("auth.welcome")}
+      subtitle={t("auth.loginSubtitle")}
+      formTitle={t("auth.loginFormTitle")}
     >
       <form className="space-y-4" onSubmit={onSubmit}>
         <AuthInput
           name="email"
           type="email"
           required
-          placeholder="Email"
+          placeholder={t("common.email")}
           autoComplete={remember ? "email" : "off"}
           icon={<Mail className="h-4 w-4" />}
         />
@@ -66,7 +68,7 @@ export default function LoginPage() {
           name="password"
           type="password"
           required
-          placeholder="Password"
+          placeholder={t("common.password")}
           autoComplete={remember ? "current-password" : "off"}
           icon={<Lock className="h-4 w-4" />}
         />
@@ -78,12 +80,14 @@ export default function LoginPage() {
               onChange={(e) => setRemember(e.target.checked)}
               className="h-4 w-4 accent-[#7c3aed]"
             />
-            Remember
+            {t("common.remember")}
           </label>
         </div>
         {error && <p className="text-center text-sm text-rose-500">{error}</p>}
         <div className="pt-2">
-          <AuthButton disabled={pending}>{pending ? "SIGNING IN..." : "LOGIN"}</AuthButton>
+          <AuthButton disabled={pending}>
+            {pending ? t("auth.signingIn") : t("auth.loginBtn")}
+          </AuthButton>
         </div>
       </form>
     </AuthCard>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Card, StatusBadge } from "@/components/ui";
 import { FilterTabs, timeAgo } from "@/components/AdminNav";
-import { formatGender } from "@/lib/utils";
+import { genderKey, useI18n } from "@/lib/i18n";
 
 type Row = {
   id: string;
@@ -18,6 +18,7 @@ type Row = {
 };
 
 export default function AdminVerificationPage() {
+  const { t, tError } = useI18n();
   const [users, setUsers] = useState<Row[]>([]);
   const [reason, setReason] = useState<Record<string, string>>({});
   const [error, setError] = useState<Record<string, string>>({});
@@ -46,7 +47,7 @@ export default function AdminVerificationPage() {
     const data = await res.json();
     setBusy(null);
     if (!res.ok) {
-      setError((e) => ({ ...e, [id]: data.error || "Could not update" }));
+      setError((e) => ({ ...e, [id]: tError(data.error, "admin.couldNotUpdate") }));
       return;
     }
     void load();
@@ -56,25 +57,23 @@ export default function AdminVerificationPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">Verification queue</h1>
-          <p className="text-sm text-muted">
-            Users can chat while pending. Rejecting a photo blocks them from chat immediately.
-          </p>
+          <h1 className="text-2xl font-semibold">{t("admin.verificationQueue")}</h1>
+          <p className="text-sm text-muted">{t("admin.verifBody")}</p>
         </div>
         <FilterTabs
           value={filter}
           onChange={setFilter}
           options={[
-            { value: "PENDING", label: "Pending" },
-            { value: "APPROVED", label: "Approved" },
-            { value: "REJECTED", label: "Rejected" },
+            { value: "PENDING", label: t("status.PENDING") },
+            { value: "APPROVED", label: t("status.APPROVED") },
+            { value: "REJECTED", label: t("status.REJECTED") },
           ]}
         />
       </div>
       <div className="grid gap-4">
         {users.length === 0 && (
           <Card>
-            <p className="text-sm text-muted">Nothing in this queue.</p>
+            <p className="text-sm text-muted">{t("admin.nothingQueue")}</p>
           </Card>
         )}
         {users.map((u) => (
@@ -89,7 +88,7 @@ export default function AdminVerificationPage() {
                 />
               ) : (
                 <div className="grid h-64 place-items-center text-sm text-muted">
-                  No photo
+                  {t("admin.noPhoto")}
                 </div>
               )}
             </div>
@@ -101,8 +100,11 @@ export default function AdminVerificationPage() {
               <p className="text-sm text-muted">
                 {u.email}
                 <br />
-                Stated gender: {formatGender(u.gender)} · Age {u.age} · submitted{" "}
-                {timeAgo(u.createdAt)}
+                {t("admin.statedGender", {
+                  gender: t(genderKey(u.gender)),
+                  age: u.age,
+                  time: timeAgo(u.createdAt, t),
+                })}
               </p>
               {u.verificationRejectReason && (
                 <p className="rounded-2xl bg-danger/10 px-3 py-2 text-sm text-danger">
@@ -116,7 +118,7 @@ export default function AdminVerificationPage() {
                     onChange={(e) =>
                       setReason((r) => ({ ...r, [u.id]: e.target.value }))
                     }
-                    placeholder="Rejection reason (required to reject)"
+                    placeholder={t("admin.rejectReason")}
                     className="w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm"
                   />
                   {error[u.id] && (
@@ -124,14 +126,14 @@ export default function AdminVerificationPage() {
                   )}
                   <div className="flex gap-2">
                     <Button onClick={() => act(u.id, "approve")} disabled={busy === u.id}>
-                      Approve
+                      {t("admin.approve")}
                     </Button>
                     <Button
                       variant="danger"
                       onClick={() => act(u.id, "reject")}
                       disabled={busy === u.id}
                     >
-                      Reject
+                      {t("admin.reject")}
                     </Button>
                   </div>
                 </>

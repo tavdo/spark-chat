@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { SparkMark } from "./ui";
 import type { ReactNode } from "react";
+import { LanguageSwitch } from "./LanguageSwitch";
+import { SparkMark } from "./ui";
 
 export function AppHeader({
   right,
@@ -12,7 +13,10 @@ export function AppHeader({
       <Link href="/">
         <SparkMark />
       </Link>
-      <div className="flex items-center gap-3">{right}</div>
+      <div className="flex items-center gap-3">
+        <LanguageSwitch />
+        {right}
+      </div>
     </header>
   );
 }

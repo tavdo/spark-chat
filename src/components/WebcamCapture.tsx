@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui";
 import { Camera, RefreshCcw } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
 
 type Props = {
   onCapture: (blob: Blob) => void;
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export function WebcamCapture({ onCapture, previewUrl }: Props) {
+  const { t } = useI18n();
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ export function WebcamCapture({ onCapture, previewUrl }: Props) {
           setReady(true);
         }
       } catch {
-        setError("Camera access is required for verification. Allow the webcam and try again.");
+        setError(t("webcam.cameraRequired"));
       }
     }
     if (!shot) void start();
@@ -79,7 +81,7 @@ export function WebcamCapture({ onCapture, previewUrl }: Props) {
       <div className="relative mx-auto aspect-square w-full max-w-sm overflow-hidden rounded-3xl border border-border bg-black">
         {shot ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={shot} alt="Captured face" className="h-full w-full object-cover" />
+          <img src={shot} alt={t("webcam.alt")} className="h-full w-full object-cover" />
         ) : (
           <video
             ref={videoRef}
@@ -97,18 +99,16 @@ export function WebcamCapture({ onCapture, previewUrl }: Props) {
         {shot ? (
           <Button type="button" className="bg-[#7c3aed] text-white hover:bg-[#6d28d9]" onClick={retake}>
             <RefreshCcw className="h-4 w-4" />
-            Retake
+            {t("webcam.retake")}
           </Button>
         ) : (
           <Button type="button" onClick={capture} disabled={!ready}>
             <Camera className="h-4 w-4" />
-            Capture face photo
+            {t("webcam.capture")}
           </Button>
         )}
       </div>
-      <p className="text-center text-xs text-muted">
-        Live capture only — this photo is used for gender and identity checks, and is visible to admins.
-      </p>
+      <p className="text-center text-xs text-muted">{t("webcam.hint")}</p>
     </div>
   );
 }

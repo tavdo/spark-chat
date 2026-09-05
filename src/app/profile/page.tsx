@@ -7,7 +7,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { Button, Card, Field, Input, StatusBadge } from "@/components/ui";
 import { WebcamCapture } from "@/components/WebcamCapture";
 import { INTEREST_OPTIONS } from "@/lib/constants";
-import { formatGender, initials } from "@/lib/utils";
+import { genderKey, interestKey, useI18n } from "@/lib/i18n";
+import { initials } from "@/lib/utils";
 import { BadgeCheck } from "lucide-react";
 
 type User = {
@@ -24,6 +25,7 @@ type User = {
 };
 
 export default function ProfilePage() {
+  const { t, tError } = useI18n();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [bio, setBio] = useState("");
@@ -64,11 +66,11 @@ export default function ProfilePage() {
     const data = await res.json();
     setSaving(false);
     if (!res.ok) {
-      setMessage(data.error || "Could not save");
+      setMessage(tError(data.error, "profile.couldNotSave"));
       return;
     }
     setUser(data.user);
-    setMessage("Saved");
+    setMessage(t("profile.saved"));
   }
 
   async function resubmit() {
@@ -78,13 +80,13 @@ export default function ProfilePage() {
     const res = await fetch("/api/verification", { method: "POST", body: form });
     const data = await res.json();
     if (!res.ok) {
-      setMessage(data.error || "Could not resubmit");
+      setMessage(tError(data.error, "pending.couldNotResubmit"));
       return;
     }
     setUser((u) =>
       u ? { ...u, verificationStatus: "PENDING", verificationRejectReason: null } : u
     );
-    setMessage("Photo submitted. You can chat again now.");
+    setMessage(t("profile.photoSubmitted"));
     router.push("/chat");
   }
 
@@ -102,11 +104,11 @@ export default function ProfilePage() {
           <>
             {user.verificationStatus !== "REJECTED" && (
               <Link href="/chat">
-                <Button>Chat</Button>
+                <Button>{t("common.chat")}</Button>
               </Link>
             )}
             <Button variant="ghost" onClick={logout}>
-              Sign out
+              {t("common.signOut")}
             </Button>
           </>
         }
@@ -129,7 +131,7 @@ export default function ProfilePage() {
               )}
             </div>
             <p className="text-sm text-muted">
-              {formatGender(user.gender)} · {user.age}
+              {t(genderKey(user.gender))} · {user.age}
             </p>
           </div>
           <StatusBadge status={user.verificationStatus} />
@@ -138,20 +140,18 @@ export default function ProfilePage() {
         <div className="space-y-6">
           {user.verificationStatus !== "APPROVED" && (
             <Card className="space-y-3">
-              <h2 className="text-lg font-semibold">Verification</h2>
+              <h2 className="text-lg font-semibold">{t("profile.verification")}</h2>
               {user.verificationStatus === "PENDING" && (
-                <p className="text-sm text-muted">
-                  You can chat now. An admin still reviews your selfie and can block the account if it is rejected.
-                </p>
+                <p className="text-sm text-muted">{t("profile.pendingNote")}</p>
               )}
               {user.verificationStatus === "REJECTED" && (
                 <>
                   <p className="text-sm text-danger">
-                    {user.verificationRejectReason || "Your photo was rejected. You are blocked from chat."}
+                    {user.verificationRejectReason || t("profile.rejectedDefault")}
                   </p>
                   <WebcamCapture onCapture={setPhoto} />
                   <Button onClick={resubmit} disabled={!photo}>
-                    Resubmit photo
+                    {t("profile.resubmit")}
                   </Button>
                 </>
               )}
@@ -160,11 +160,11 @@ export default function ProfilePage() {
 
           <Card>
             <form className="space-y-4" onSubmit={save}>
-              <h2 className="text-lg font-semibold">Edit profile</h2>
-              <Field label="Nickname">
+              <h2 className="text-lg font-semibold">{t("profile.edit")}</h2>
+              <Field label={t("common.nickname")}>
                 <Input value={nickname} onChange={(e) => setNickname(e.target.value)} />
               </Field>
-              <Field label="Bio">
+              <Field label={t("common.bio")}>
                 <textarea
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
@@ -174,7 +174,7 @@ export default function ProfilePage() {
                 />
               </Field>
               <div>
-                <p className="mb-2 text-sm text-muted">Interests</p>
+                <p className="mb-2 text-sm text-muted">{t("common.interests")}</p>
                 <div className="flex flex-wrap gap-2">
                   {INTEREST_OPTIONS.map((tag) => {
                     const on = interests.includes(tag);
@@ -191,14 +191,14 @@ export default function ProfilePage() {
                           on ? "bg-accent-strong text-white" : "bg-surface-2 text-muted"
                         }`}
                       >
-                        {tag}
+                        {interestKey(tag) ? t(interestKey(tag)!) : tag}
                       </button>
                     );
                   })}
                 </div>
               </div>
               {message && <p className="text-sm text-accent">{message}</p>}
-              <Button disabled={saving}>{saving ? "Saving..." : "Save changes"}</Button>
+              <Button disabled={saving}>{saving ? t("common.saving") : t("common.save")}</Button>
             </form>
           </Card>
         </div>

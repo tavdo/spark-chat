@@ -1,35 +1,38 @@
-import Link from "next/link";
-import { BrandArt, Button, SparkMark } from "@/components/ui";
+"use client";
 
-const features = [
-  {
-    src: "/brand/logo.jpg",
-    title: "Instant chat",
-    body: "Send a selfie and talk to a stranger right away. Skip whenever you want.",
-  },
-  {
-    src: "/brand/logo-glow.jpg",
-    title: "Live matching",
-    body: "One-on-one text, photos, voice notes, and GIFs — no feed.",
-  },
-  {
-    src: "/brand/shield.jpg",
-    title: "Selfie first",
-    body: "No waiting on admin. If a photo is rejected later, that account is blocked from chat.",
-  },
+import Link from "next/link";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
+import { BrandArt, Button, SparkMark } from "@/components/ui";
+import { useI18n } from "@/lib/i18n";
+import type { MessageKey } from "@/lib/i18n";
+
+const features: Array<{ src: string; title: MessageKey; body: MessageKey }> = [
+  { src: "/brand/logo.jpg", title: "home.feat1Title", body: "home.feat1Body" },
+  { src: "/brand/logo-glow.jpg", title: "home.feat2Title", body: "home.feat2Body" },
+  { src: "/brand/shield.jpg", title: "home.feat3Title", body: "home.feat3Body" },
+];
+
+const media: MessageKey[] = [
+  "home.mediaText",
+  "home.mediaPhoto",
+  "home.mediaVoice",
+  "home.mediaGifs",
 ];
 
 export default function Home() {
+  const { t } = useI18n();
+
   return (
     <div className="glow-bg flex min-h-full flex-col">
       <header className="flex items-center justify-between px-6 py-5">
         <SparkMark />
-        <div className="flex gap-3">
+        <div className="flex items-center gap-3">
+          <LanguageSwitch />
           <Link href="/login">
-            <Button variant="ghost">Sign in</Button>
+            <Button variant="ghost">{t("common.signIn")}</Button>
           </Link>
           <Link href="/register">
-            <Button>Join now</Button>
+            <Button>{t("common.joinNow")}</Button>
           </Link>
         </div>
       </header>
@@ -45,29 +48,27 @@ export default function Home() {
           className="mb-6 h-14 w-auto max-w-[min(100%,420px)] object-contain mix-blend-screen sm:h-16"
         />
         <p className="mb-4 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-          Verified random chat
+          {t("home.badge")}
         </p>
         <h1 className="max-w-3xl text-5xl font-semibold leading-[1.05] tracking-tight sm:text-7xl">
-          Meet a stranger.
-          <span className="block text-accent">Skip anytime.</span>
+          {t("home.title")}
+          <span className="block text-accent">{t("home.titleAccent")}</span>
         </h1>
-        <p className="mt-6 max-w-xl text-lg text-muted">
-          Send a live selfie, then jump into one-on-one text, photos, voice, and GIFs. No waiting on admin approval.
-        </p>
+        <p className="mt-6 max-w-xl text-lg text-muted">{t("home.subtitle")}</p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Link href="/register">
-            <Button className="px-8 py-3 text-base">Start chatting</Button>
+            <Button className="px-8 py-3 text-base">{t("home.startChatting")}</Button>
           </Link>
           <Link href="/login">
             <Button variant="ghost" className="px-8 py-3 text-base">
-              I already have an account
+              {t("home.haveAccount")}
             </Button>
           </Link>
         </div>
         <p className="mt-12 text-sm text-muted">
-          Moderator?{" "}
+          {t("home.moderator")}{" "}
           <Link href="/admin/login" className="text-accent hover:underline">
-            Open the admin panel
+            {t("home.adminPanel")}
           </Link>
         </p>
         <div className="mt-16 grid w-full max-w-4xl gap-4 sm:grid-cols-3">
@@ -81,18 +82,18 @@ export default function Home() {
                 alt=""
                 className="mx-auto mb-4 h-20 w-20 rounded-2xl object-cover ring-1 ring-accent/20"
               />
-              <p className="font-semibold">{item.title}</p>
-              <p className="mt-2 text-sm text-muted">{item.body}</p>
+              <p className="font-semibold">{t(item.title)}</p>
+              <p className="mt-2 text-sm text-muted">{t(item.body)}</p>
             </div>
           ))}
         </div>
         <div className="mt-8 grid w-full max-w-3xl grid-cols-2 gap-3 sm:grid-cols-4">
-          {["Text", "Photo", "Voice", "GIFs"].map((item) => (
+          {media.map((item) => (
             <div
               key={item}
               className="rounded-2xl border border-border bg-surface/70 px-4 py-5 text-sm font-medium backdrop-blur-xl"
             >
-              {item}
+              {t(item)}
             </div>
           ))}
         </div>

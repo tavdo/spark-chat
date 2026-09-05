@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { BrandArt, Button, Card } from "@/components/ui";
 import { WebcamCapture } from "@/components/WebcamCapture";
+import { useI18n } from "@/lib/i18n";
 
 type Me = {
   nickname: string;
@@ -14,6 +15,7 @@ type Me = {
 };
 
 export default function PendingPage() {
+  const { t, tError } = useI18n();
   const router = useRouter();
   const [me, setMe] = useState<Me | null>(null);
   const [photo, setPhoto] = useState<Blob | null>(null);
@@ -50,7 +52,7 @@ export default function PendingPage() {
     const data = await res.json();
     setPending(false);
     if (!res.ok) {
-      setError(data.error || "Could not resubmit");
+      setError(tError(data.error, "pending.couldNotResubmit"));
       return;
     }
     setPhoto(null);
@@ -69,7 +71,7 @@ export default function PendingPage() {
       <AppHeader
         right={
           <Button variant="ghost" onClick={logout}>
-            Sign out
+            {t("common.signOut")}
           </Button>
         }
       />
@@ -80,10 +82,8 @@ export default function PendingPage() {
             alt=""
             className="mx-auto h-20 w-20 rounded-2xl object-cover ring-1 ring-accent/20"
           />
-          <h1 className="text-2xl font-semibold">You were blocked from chat</h1>
-          <p className="text-sm text-muted">
-            An admin rejected your selfie. Send a new live photo to get back in — you can chat again as soon as it is submitted.
-          </p>
+          <h1 className="text-2xl font-semibold">{t("pending.title")}</h1>
+          <p className="text-sm text-muted">{t("pending.body")}</p>
           {me.verificationRejectReason && (
             <p className="rounded-2xl bg-danger/10 px-4 py-3 text-sm text-danger">
               {me.verificationRejectReason}
@@ -93,7 +93,7 @@ export default function PendingPage() {
             <WebcamCapture onCapture={setPhoto} />
             {error && <p className="text-sm text-danger">{error}</p>}
             <Button className="w-full" disabled={!photo || pending} onClick={resubmit}>
-              {pending ? "Sending..." : "Resubmit photo"}
+              {pending ? t("pending.sending") : t("pending.resubmit")}
             </Button>
           </div>
         </Card>

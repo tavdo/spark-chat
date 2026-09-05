@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
+import { Geist, Geist_Mono, Noto_Sans_Georgian } from "next/font/google";
+import { LanguageProvider } from "@/lib/i18n";
+import { isLocale, LANG_COOKIE } from "@/lib/i18n/dictionaries";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,19 +15,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const notoGeorgian = Noto_Sans_Georgian({
+  variable: "--font-noto-georgian",
+  subsets: ["georgian"],
+  weight: ["400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "Spark — verified random chat",
   description:
     "Send a selfie and talk to a stranger. Text, photos, voice, and GIFs.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const jar = await cookies();
+  const raw = jar.get(LANG_COOKIE)?.value;
+  const initialLocale = isLocale(raw) ? raw : "en";
+
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang={initialLocale}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoGeorgian.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col text-text">{children}</body>
+      <body className="min-h-full flex flex-col text-text">
+        <LanguageProvider initialLocale={initialLocale}>{children}</LanguageProvider>
+      </body>
     </html>
   );
 }

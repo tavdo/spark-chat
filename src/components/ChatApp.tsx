@@ -14,9 +14,11 @@ import {
   Sticker,
   Square,
 } from "lucide-react";
+import { LanguageSwitch } from "./LanguageSwitch";
 import { BrandArt, Button, SparkMark } from "./ui";
 import { REPORT_REASONS } from "@/lib/constants";
-import { cn, formatGender } from "@/lib/utils";
+import { genderKey, reportKey, useI18n } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 type Phase = "idle" | "searching" | "chatting" | "ended";
 
@@ -64,6 +66,7 @@ export function ChatApp({
 }: {
   me: { id: string; nickname: string; avatarUrl: string | null };
 }) {
+  const { t } = useI18n();
   const router = useRouter();
   const scrollerRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -288,11 +291,11 @@ export function ChatApp({
   }
 
   const statusLabel = useMemo(() => {
-    if (phase === "searching") return "Connecting...";
-    if (phase === "chatting" && stranger) return `Stranger found · ${stranger.nickname}`;
-    if (phase === "ended") return "Stranger disconnected";
-    return "Ready when you are";
-  }, [phase, stranger]);
+    if (phase === "searching") return t("chat.connecting");
+    if (phase === "chatting" && stranger) return t("chat.strangerFound", { name: stranger.nickname });
+    if (phase === "ended") return t("chat.disconnected");
+    return t("chat.ready");
+  }, [phase, stranger, t]);
 
   return (
     <div className="flex h-screen flex-col bg-black/35">
@@ -301,12 +304,13 @@ export function ChatApp({
           <SparkMark />
         </Link>
         <div className="flex items-center gap-2">
+          <LanguageSwitch />
           <Button
             onClick={phase === "idle" ? start : skip}
             className="min-w-28"
           >
             <SkipForward className="h-4 w-4" />
-            {phase === "idle" ? "Start chat" : "Skip"}
+            {phase === "idle" ? t("chat.start") : t("chat.skip")}
           </Button>
           <div className="relative">
             <Button variant="ghost" className="px-3" onClick={() => setMenuOpen((v) => !v)}>
@@ -319,7 +323,7 @@ export function ChatApp({
                   onClick={block}
                   disabled={phase !== "chatting"}
                 >
-                  <ShieldBan className="h-4 w-4" /> Block
+                  <ShieldBan className="h-4 w-4" /> {t("chat.block")}
                 </button>
                 <button
                   className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-2"
@@ -329,19 +333,19 @@ export function ChatApp({
                   }}
                   disabled={phase !== "chatting"}
                 >
-                  <Flag className="h-4 w-4" /> Report
+                  <Flag className="h-4 w-4" /> {t("chat.report")}
                 </button>
                 <Link
                   href="/profile"
                   className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-surface-2"
                 >
-                  Profile
+                  {t("common.profile")}
                 </Link>
                 <button
                   className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-surface-2"
                   onClick={logout}
                 >
-                  Sign out
+                  {t("common.signOut")}
                 </button>
               </div>
             )}
@@ -355,9 +359,9 @@ export function ChatApp({
         {phase === "idle" && (
           <EmptyState
             art="/brand/logo.jpg"
-            title="Talk to someone new"
-            body="You'll be paired with a verified stranger. Skip is instant."
-            action="Start chat"
+            title={t("chat.idleTitle")}
+            body={t("chat.idleBody")}
+            action={t("chat.start")}
             onAction={start}
           />
         )}
@@ -365,22 +369,26 @@ export function ChatApp({
           <EmptyState
             art="/brand/logo-glow.jpg"
             pulse
-            title="Connecting..."
-            body="Looking for the next available stranger."
+            title={t("chat.connecting")}
+            body={t("chat.searchingBody")}
           />
         )}
         {phase === "ended" && (
           <EmptyState
             art="/brand/logo.jpg"
-            title="Stranger disconnected"
-            body="Jump back in whenever you're ready."
-            action="Next stranger"
+            title={t("chat.disconnected")}
+            body={t("chat.endedBody")}
+            action={t("chat.nextStranger")}
             onAction={start}
           />
         )}
         {stranger && phase === "chatting" && (
           <p className="text-center text-xs text-muted">
-            Chatting with {stranger.nickname} · {formatGender(stranger.gender)}, {stranger.age}
+            {t("chat.chattingWith", {
+              name: stranger.nickname,
+              gender: t(genderKey(stranger.gender)),
+              age: stranger.age,
+            })}
           </p>
         )}
         {messages.map((msg) => (
@@ -388,7 +396,7 @@ export function ChatApp({
         ))}
         {typing && phase === "chatting" && (
           <div className="max-w-[70%] rounded-2xl bg-surface-2 px-4 py-2 text-sm text-muted">
-            Stranger is typing...
+            {t("chat.typing")}
           </div>
         )}
       </div>
@@ -427,7 +435,7 @@ export function ChatApp({
             setText(e.target.value);
             void postSession({ action: "typing", typing: e.target.value.length > 0 });
           }}
-          placeholder={recording ? "Recording voice..." : "Say something"}
+          placeholder={recording ? t("chat.recording") : t("chat.saySomething")}
           className="flex-1 rounded-2xl border border-border bg-surface-2 px-4 py-3 text-sm outline-none focus:border-accent"
         />
         <Button type="submit" className="h-12 w-12 px-0" disabled={phase !== "chatting"}>
@@ -605,7 +613,8 @@ function GifPicker({
   onClose: () => void;
   onPick: (url: string) => void;
 }) {
-  const [q, setQ] = useState("hello");
+  const { t, locale } = useI18n();
+  const [q, setQ] = useState(locale === "ka" ? "გამარჯობა" : "hello");
   const [gifs, setGifs] = useState<Array<{ id: string; preview: string; url: string }>>([]);
   const [configured, setConfigured] = useState(true);
 
@@ -631,17 +640,15 @@ function GifPicker({
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search KLIPY"
+            placeholder={t("chat.gifSearch")}
             className="flex-1 rounded-xl bg-surface-2 px-3 py-2 text-sm outline-none"
           />
           <Button variant="ghost" onClick={onClose}>
-            Close
+            {t("common.close")}
           </Button>
         </div>
         {!configured && (
-          <p className="p-4 text-sm text-muted">
-            Add a KLIPY_API_KEY to enable GIF search.
-          </p>
+          <p className="p-4 text-sm text-muted">{t("chat.gifMissing")}</p>
         )}
         <div className="grid grid-cols-3 gap-2 overflow-y-auto p-3">
           {gifs.map((g) => (
@@ -663,6 +670,7 @@ function ReportModal({
   onClose: () => void;
   onSubmit: (reason: string, details: string) => void;
 }) {
+  const { t } = useI18n();
   const [reason, setReason] = useState("SPAM");
   const [details, setDetails] = useState("");
   return (
@@ -671,7 +679,7 @@ function ReportModal({
         className="w-full max-w-md space-y-4 rounded-3xl border border-border bg-surface p-5"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold">Report this stranger</h2>
+        <h2 className="text-lg font-semibold">{t("chat.reportTitle")}</h2>
         <select
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -679,22 +687,22 @@ function ReportModal({
         >
           {REPORT_REASONS.map((r) => (
             <option key={r.value} value={r.value}>
-              {r.label}
+              {reportKey(r.value) ? t(reportKey(r.value)!) : r.label}
             </option>
           ))}
         </select>
         <textarea
           value={details}
           onChange={(e) => setDetails(e.target.value)}
-          placeholder="Optional details"
+          placeholder={t("chat.reportDetails")}
           className="h-24 w-full rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm"
         />
         <div className="flex gap-2">
           <Button variant="ghost" className="flex-1" onClick={onClose}>
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button className="flex-1" variant="danger" onClick={() => onSubmit(reason, details)}>
-            Report & skip
+            {t("chat.reportSkip")}
           </Button>
         </div>
       </div>

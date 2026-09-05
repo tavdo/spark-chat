@@ -5,7 +5,9 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Flag, LayoutDashboard, ShieldCheck, Users } from "lucide-react";
 import { AdminSignOut } from "./AdminSignOut";
+import { LanguageSwitch } from "./LanguageSwitch";
 import { SparkMark } from "./ui";
+import { useI18n, type MessageKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 type Stats = {
@@ -14,23 +16,24 @@ type Stats = {
 };
 
 const items = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin", label: "admin.dashboard" as const, icon: LayoutDashboard, exact: true },
   {
     href: "/admin/verifications",
-    label: "Verification",
+    label: "admin.verification" as const,
     icon: ShieldCheck,
     countKey: "pendingVerifications" as const,
   },
   {
     href: "/admin/reports",
-    label: "Reports",
+    label: "admin.reports" as const,
     icon: Flag,
     countKey: "openReports" as const,
   },
-  { href: "/admin/users", label: "Users", icon: Users },
+  { href: "/admin/users", label: "admin.users" as const, icon: Users },
 ];
 
 export function AdminNav() {
+  const { t } = useI18n();
   const pathname = usePathname();
   const [stats, setStats] = useState<Stats | null>(null);
 
@@ -53,7 +56,7 @@ export function AdminNav() {
           <SparkMark />
         </Link>
         <p className="mt-2 px-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-          Moderation
+          {t("admin.moderation")}
         </p>
         <nav className="mt-6 flex-1 space-y-1">
           {items.map((item) => {
@@ -75,7 +78,7 @@ export function AdminNav() {
               >
                 <span className="flex items-center gap-2.5">
                   <Icon className="h-4 w-4" />
-                  {item.label}
+                  {t(item.label)}
                 </span>
                 {!!count && (
                   <span
@@ -91,10 +94,16 @@ export function AdminNav() {
             );
           })}
         </nav>
+        <div className="mb-3">
+          <LanguageSwitch />
+        </div>
         <AdminSignOut />
       </aside>
-      <header className="flex items-center justify-between border-b border-border px-4 py-3 md:hidden">
-        <SparkMark />
+      <header className="flex flex-col gap-3 border-b border-border px-4 py-3 md:hidden">
+        <div className="flex items-center justify-between">
+          <SparkMark />
+          <LanguageSwitch />
+        </div>
         <div className="flex gap-1 overflow-x-auto">
           {items.map((item) => (
             <Link
@@ -108,7 +117,7 @@ export function AdminNav() {
                   : "text-muted"
               )}
             >
-              {item.label}
+              {t(item.label)}
             </Link>
           ))}
         </div>
@@ -145,13 +154,16 @@ export function FilterTabs({
   );
 }
 
-export function timeAgo(iso: string) {
+export function timeAgo(
+  iso: string,
+  t?: (key: MessageKey, vars?: Record<string, string | number>) => string
+) {
   const seconds = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
-  if (seconds < 60) return "just now";
+  if (seconds < 60) return t ? t("time.justNow") : "just now";
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return t ? t("time.minutesAgo", { n: minutes }) : `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) return t ? t("time.hoursAgo", { n: hours }) : `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return t ? t("time.daysAgo", { n: days }) : `${days}d ago`;
 }

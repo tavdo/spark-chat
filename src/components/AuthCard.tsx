@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type {
   ButtonHTMLAttributes,
@@ -5,6 +7,8 @@ import type {
   ReactNode,
   SelectHTMLAttributes,
 } from "react";
+import { LanguageSwitch } from "@/components/LanguageSwitch";
+import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
 function NightSky() {
@@ -69,6 +73,7 @@ export function AuthCard({
   wide?: boolean;
   mode: "login" | "register" | "admin";
 }) {
+  const { t } = useI18n();
   return (
     <div className="auth-night flex min-h-full items-center justify-center p-4 sm:p-8">
       <div
@@ -80,9 +85,12 @@ export function AuthCard({
         <div className="relative min-h-[220px] px-8 pb-8 pt-10 text-white sm:min-h-[240px]">
           <NightSky />
           <div className="relative z-10">
-            <Link href="/" className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
-              Spark
-            </Link>
+            <div className="flex items-start justify-between gap-3">
+              <Link href="/" className="text-xs font-semibold uppercase tracking-[0.22em] text-white/70">
+                Spark
+              </Link>
+              <LanguageSwitch />
+            </div>
             <h1 className="mt-6 text-[28px] font-semibold leading-tight">{title}</h1>
             <p className="mt-3 max-w-[16rem] text-sm leading-relaxed text-white/75">{subtitle}</p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -95,7 +103,7 @@ export function AuthCard({
                     : "bg-[#2a104f] ring-1 ring-white/70 hover:bg-white/10"
                 )}
               >
-                Create Account
+                {t("auth.createAccount")}
               </Link>
               <Link
                 href="/login"
@@ -106,7 +114,7 @@ export function AuthCard({
                     : "bg-[#2a104f] ring-1 ring-white/70 hover:bg-white/10"
                 )}
               >
-                User Login
+                {t("auth.userLogin")}
               </Link>
             </div>
           </div>

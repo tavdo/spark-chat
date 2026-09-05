@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button, Card, Input, StatusBadge } from "@/components/ui";
 import { FilterTabs } from "@/components/AdminNav";
-import { formatGender } from "@/lib/utils";
+import { genderKey, useI18n } from "@/lib/i18n";
 
 type User = {
   id: string;
@@ -17,6 +17,7 @@ type User = {
 };
 
 export default function AdminUsersPage() {
+  const { t } = useI18n();
   const [q, setQ] = useState("");
   const [users, setUsers] = useState<User[]>([]);
   const [filter, setFilter] = useState("ALL");
@@ -53,10 +54,8 @@ export default function AdminUsersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Users</h1>
-        <p className="text-sm text-muted">
-          Search, check verification, warn, suspend, ban, or restore access.
-        </p>
+        <h1 className="text-2xl font-semibold">{t("admin.users")}</h1>
+        <p className="text-sm text-muted">{t("admin.usersBody")}</p>
       </div>
       <form
         className="flex flex-col gap-3 sm:flex-row"
@@ -68,25 +67,25 @@ export default function AdminUsersPage() {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search nickname or email"
+          placeholder={t("admin.searchPlaceholder")}
         />
-        <Button>Search</Button>
+        <Button>{t("common.search")}</Button>
       </form>
       <FilterTabs
         value={filter}
         onChange={setFilter}
         options={[
-          { value: "ALL", label: "All" },
-          { value: "PENDING", label: "Pending verify" },
-          { value: "WARNED", label: "Warned" },
-          { value: "SUSPENDED", label: "Suspended" },
-          { value: "BANNED", label: "Banned" },
+          { value: "ALL", label: t("admin.all") },
+          { value: "PENDING", label: t("admin.pendingVerify") },
+          { value: "WARNED", label: t("status.WARNED") },
+          { value: "SUSPENDED", label: t("status.SUSPENDED") },
+          { value: "BANNED", label: t("status.BANNED") },
         ]}
       />
       <div className="space-y-3">
         {visible.length === 0 && (
           <Card>
-            <p className="text-sm text-muted">No users match this view.</p>
+            <p className="text-sm text-muted">{t("admin.noUsers")}</p>
           </Card>
         )}
         {visible.map((u) => (
@@ -94,7 +93,8 @@ export default function AdminUsersPage() {
             <div>
               <p className="font-semibold">{u.nickname}</p>
               <p className="text-sm text-muted">
-                {u.email} · {formatGender(u.gender)} · {u.age} · warnings {u.warningCount}
+                {u.email} · {t(genderKey(u.gender))} · {u.age} ·{" "}
+                {t("admin.warnings", { n: u.warningCount })}
               </p>
               <div className="mt-2 flex gap-2">
                 <StatusBadge status={u.verificationStatus} />
@@ -107,18 +107,18 @@ export default function AdminUsersPage() {
                 disabled={busy === u.id}
                 onClick={() => act(u.id, "warn")}
               >
-                Warn
+                {t("admin.warn")}
               </Button>
               <Button
                 variant="ghost"
                 disabled={busy === u.id}
                 onClick={() => act(u.id, "suspend")}
               >
-                Suspend
+                {t("admin.suspend")}
               </Button>
               {u.status === "BANNED" ? (
                 <Button disabled={busy === u.id} onClick={() => act(u.id, "unban")}>
-                  Unban
+                  {t("admin.unban")}
                 </Button>
               ) : (
                 <Button
@@ -126,7 +126,7 @@ export default function AdminUsersPage() {
                   disabled={busy === u.id}
                   onClick={() => act(u.id, "ban")}
                 >
-                  Ban
+                  {t("admin.ban")}
                 </Button>
               )}
             </div>

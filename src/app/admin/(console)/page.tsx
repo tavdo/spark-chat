@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Flag, ShieldCheck, UserMinus, Users } from "lucide-react";
 import { Button, Card, StatusBadge } from "@/components/ui";
 import { timeAgo } from "@/components/AdminNav";
-import { formatGender } from "@/lib/utils";
+import { genderKey, useI18n } from "@/lib/i18n";
 
 type Stats = {
   pendingVerifications: number;
@@ -35,6 +35,7 @@ type Report = {
 };
 
 export default function AdminDashboardPage() {
+  const { t } = useI18n();
   const [stats, setStats] = useState<Stats | null>(null);
   const [pending, setPending] = useState<PendingUser[]>([]);
   const [reports, setReports] = useState<Report[]>([]);
@@ -53,19 +54,19 @@ export default function AdminDashboardPage() {
 
   const cards = [
     {
-      label: "Pending photos",
+      label: t("admin.pendingPhotos"),
       value: stats?.pendingVerifications ?? "—",
       href: "/admin/verifications",
       icon: ShieldCheck,
     },
     {
-      label: "Open reports",
+      label: t("admin.openReports"),
       value: stats?.openReports ?? "—",
       href: "/admin/reports",
       icon: Flag,
     },
     {
-      label: "Banned / suspended",
+      label: t("admin.bannedSuspended"),
       value:
         stats == null
           ? "—"
@@ -74,7 +75,7 @@ export default function AdminDashboardPage() {
       icon: UserMinus,
     },
     {
-      label: "People",
+      label: t("admin.people"),
       value: stats?.totalUsers ?? "—",
       href: "/admin/users",
       icon: Users,
@@ -85,12 +86,10 @@ export default function AdminDashboardPage() {
     <div className="space-y-8">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
-          Admin
+          {t("admin.moderation")}
         </p>
-        <h1 className="mt-1 text-3xl font-semibold">Moderation desk</h1>
-        <p className="mt-1 text-sm text-muted">
-          Review face photos, act on reports, and manage accounts.
-        </p>
+        <h1 className="mt-1 text-3xl font-semibold">{t("admin.desk")}</h1>
+        <p className="mt-1 text-sm text-muted">{t("admin.deskBody")}</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -108,14 +107,14 @@ export default function AdminDashboardPage() {
       <div className="grid gap-6 xl:grid-cols-2">
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Verification queue</h2>
+            <h2 className="text-lg font-semibold">{t("admin.verificationQueue")}</h2>
             <Link href="/admin/verifications" className="text-sm text-accent">
-              Open queue
+              {t("admin.openQueue")}
             </Link>
           </div>
           {pending.length === 0 ? (
             <Card>
-              <p className="text-sm text-muted">No photos waiting.</p>
+              <p className="text-sm text-muted">{t("admin.noPhotos")}</p>
             </Card>
           ) : (
             pending.map((u) => (
@@ -133,7 +132,7 @@ export default function AdminDashboardPage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-semibold">{u.nickname}</p>
                   <p className="truncate text-sm text-muted">
-                    {formatGender(u.gender)} · {u.age} · {timeAgo(u.createdAt)}
+                    {t(genderKey(u.gender))} · {u.age} · {timeAgo(u.createdAt, t)}
                   </p>
                 </div>
                 <StatusBadge status="PENDING" />
@@ -144,14 +143,14 @@ export default function AdminDashboardPage() {
 
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Open reports</h2>
+            <h2 className="text-lg font-semibold">{t("admin.openReports")}</h2>
             <Link href="/admin/reports" className="text-sm text-accent">
-              Open queue
+              {t("admin.openQueue")}
             </Link>
           </div>
           {reports.length === 0 ? (
             <Card>
-              <p className="text-sm text-muted">No open reports.</p>
+              <p className="text-sm text-muted">{t("admin.noOpenReports")}</p>
             </Card>
           ) : (
             reports.map((r) => (
@@ -163,7 +162,7 @@ export default function AdminDashboardPage() {
                   <StatusBadge status={r.reason} />
                 </div>
                 <p className="mt-1 text-sm text-muted">
-                  {r.reported.email} · {timeAgo(r.createdAt)}
+                  {r.reported.email} · {timeAgo(r.createdAt, t)}
                 </p>
               </Card>
             ))
@@ -172,7 +171,7 @@ export default function AdminDashboardPage() {
       </div>
 
       <Link href="/admin/verifications">
-        <Button>Review pending photos</Button>
+        <Button>{t("admin.reviewPending")}</Button>
       </Link>
     </div>
   );

@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, Mail } from "lucide-react";
 import { AuthButton, AuthCard, AuthInput } from "@/components/AuthCard";
+import { useI18n } from "@/lib/i18n";
 
 export default function AdminLoginPage() {
+  const { t, tError } = useI18n();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -26,11 +28,11 @@ export default function AdminLoginPage() {
     const data = await res.json();
     setPending(false);
     if (!res.ok) {
-      setError(data.error || "Could not sign in");
+      setError(tError(data.error, "auth.couldNotSignIn"));
       return;
     }
     if (data.user?.role !== "ADMIN") {
-      setError("Admin only");
+      setError(t("common.adminOnly"));
       return;
     }
     router.push("/admin");
@@ -39,9 +41,9 @@ export default function AdminLoginPage() {
   return (
     <AuthCard
       mode="admin"
-      title="Welcome back"
-      subtitle="Moderator access for verification, reports, and user safety."
-      formTitle="MODERATOR LOGIN"
+      title={t("auth.adminWelcome")}
+      subtitle={t("auth.adminSubtitle")}
+      formTitle={t("auth.adminFormTitle")}
     >
       <form className="space-y-4" onSubmit={onSubmit}>
         <AuthInput
@@ -49,7 +51,7 @@ export default function AdminLoginPage() {
           type="email"
           required
           defaultValue="admin@spark.local"
-          placeholder="Email"
+          placeholder={t("common.email")}
           icon={<Mail className="h-4 w-4" />}
         />
         <AuthInput
@@ -57,12 +59,14 @@ export default function AdminLoginPage() {
           type="password"
           required
           defaultValue="changeme-admin"
-          placeholder="Password"
+          placeholder={t("common.password")}
           icon={<Lock className="h-4 w-4" />}
         />
         {error && <p className="text-center text-sm text-rose-500">{error}</p>}
         <div className="pt-2">
-          <AuthButton disabled={pending}>{pending ? "SIGNING IN..." : "LOGIN"}</AuthButton>
+          <AuthButton disabled={pending}>
+            {pending ? t("auth.signingIn") : t("auth.loginBtn")}
+          </AuthButton>
         </div>
       </form>
     </AuthCard>

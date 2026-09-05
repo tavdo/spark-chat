@@ -1,3 +1,6 @@
+"use client";
+
+import { statusKey, useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import type { ButtonHTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 
@@ -107,6 +110,8 @@ export function StatusBadge({
 }: {
   status: string;
 }) {
+  const { t } = useI18n();
+  const key = statusKey(status);
   const map: Record<string, string> = {
     PENDING: "bg-amber-400/15 text-amber-300",
     APPROVED: "bg-success/15 text-success",
@@ -127,11 +132,11 @@ export function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize",
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold",
         map[status] || "bg-surface-2 text-muted"
       )}
     >
-      {status.toLowerCase().replace("_", " ")}
+      {key ? t(key) : status.toLowerCase().replace("_", " ")}
     </span>
   );
 }
